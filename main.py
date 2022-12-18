@@ -53,7 +53,7 @@ pg.init()
 
 screen = width, height = 800, 600
 surface = pg.display.set_mode(screen)
-pg.display.set_caption("Strange game!")
+pg.display.set_caption("Бандерогусак")
 
 score = 0
 isFile = check_file()
@@ -123,7 +123,6 @@ while isWorking:
     if (keys[K_LEFT] or keys[K_a]) and not p_rect.left <= 0:
         p_rect = p_rect.move(-p_speed, 0)
 
-    # surface.blit(bg, (0, 0))
     bg_start -= bg_speed
     bg_finish -= bg_speed
 
@@ -149,6 +148,7 @@ while isWorking:
 
         if p_rect.colliderect(enemy[1]):
             enemies.pop(enemies.index(enemy))
+            write(best_score)
             isWorking = False
     
     for bonus in bonuses:
