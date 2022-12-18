@@ -1,5 +1,5 @@
 import pygame as pg
-from pygame.constants import QUIT, K_DOWN, K_UP, K_RIGHT, K_LEFT
+from pygame.constants import QUIT, K_DOWN, K_UP, K_RIGHT, K_LEFT, K_w, K_s, K_d, K_a
 import math, os
 from random import random
 
@@ -105,13 +105,13 @@ while isWorking:
 
     keys = pg.key.get_pressed()
     
-    if keys[K_DOWN] and not b_rect.bottom >= height:
+    if (keys[K_DOWN] or keys[K_s]) and not b_rect.bottom >= height:
        b_rect = b_rect.move(0, b_speed)
-    if keys[K_UP] and not b_rect.top <= 0:
+    if (keys[K_UP] or keys[K_w]) and not b_rect.top <= 0:
         b_rect = b_rect.move(0, -b_speed)
-    if keys[K_RIGHT] and not b_rect.right >= width:
+    if (keys[K_RIGHT] or keys[K_d]) and not b_rect.right >= width:
         b_rect = b_rect.move(b_speed, 0)
-    if keys[K_LEFT] and not b_rect.left <= 0:
+    if (keys[K_LEFT] or keys[K_a]) and not b_rect.left <= 0:
         b_rect = b_rect.move(-b_speed, 0)
 
     surface.fill(BLACK)
