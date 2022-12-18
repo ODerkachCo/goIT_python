@@ -3,6 +3,17 @@ from pygame.constants import QUIT, K_DOWN, K_UP, K_RIGHT, K_LEFT
 import math, os
 from random import random
 
+def check_file():
+    isFile = os.path.exists('score.txt')
+    if not isFile:
+        try:
+            with open('score.txt', 'w+') as file:
+                file.write('0')
+                file.close()
+        except Exception as ex:
+            print(f'Error: {ex}')
+            return False
+    return True
 def read():
     try:
         with open('score.txt', 'r') as file:
@@ -45,7 +56,9 @@ surface = pg.display.set_mode(screen)
 pg.display.set_caption("Strange game!")
 
 score = 0
-best_score = read()
+isFile = check_file()
+if isFile:
+    best_score = read()
 
 font = pg.font.Font('freesansbold.ttf', 18)
 
