@@ -51,7 +51,7 @@ GREEN = (0, 100, 0)
 
 pg.init()
 
-screen = width, height = 800, 600
+screen = width, height = 1280, 820
 surface = pg.display.set_mode(screen)
 pg.display.set_caption("Бандерогусак")
 
@@ -76,15 +76,14 @@ isWorking = True
 CREATE_ENEMY = pg.USEREVENT + 1
 CREATE_BONUS = pg.USEREVENT + 2
 CHANGE_IMG = pg.USEREVENT + 3
-pg.time.set_timer(CREATE_ENEMY, 1500)
-pg.time.set_timer(CREATE_BONUS, 2000)
+pg.time.set_timer(CREATE_ENEMY, get_random(500, 1500))
+pg.time.set_timer(CREATE_BONUS, get_random(1000, 3000))
 pg.time.set_timer(CHANGE_IMG, 125)
 
 def create_enemy():
     enemy = pg.image.load("./imgs/enemy.png").convert_alpha()
     e_rect = pg.Rect(width, get_random(enemy.get_size()[1], height - enemy.get_size()[1]), *enemy.get_size())
-    e_speed = get_random(2, 5)
-    return [enemy, e_rect, e_speed]
+    return [enemy, e_rect]
 def create_bonus():
     bonus = pg.image.load("./imgs/bonus.png").convert_alpha()
     bonus_rect = pg.Rect(get_random(bonus.get_size()[0], width - bonus.get_size()[0]), -bonus.get_size()[1], *bonus.get_size())
@@ -94,6 +93,9 @@ def create_bonus():
 enemies = []
 bonuses = []
 count = 0
+level = 1
+level_score = 0
+enemy_speed = 5
 FPS = pg.time.Clock()
 while isWorking:
     FPS.tick(120)
@@ -140,7 +142,7 @@ while isWorking:
     
 
     for enemy in enemies:
-        enemy[1] = enemy[1].move(-enemy[2], 0)
+        enemy[1] = enemy[1].move(-enemy_speed, 0)
         surface.blit(enemy[0], enemy[1])
 
         if enemy[1].left < -enemy[0].get_size()[0]:
@@ -150,7 +152,11 @@ while isWorking:
             enemies.pop(enemies.index(enemy))
             write(best_score)
             isWorking = False
-    
+        if score >= level_score + 10:
+            level += 1
+            level_score = score
+            enemy_speed += 2
+            
     for bonus in bonuses:
         bonus[1] = bonus[1].move(0, bonus[2])
         surface.blit(bonus[0], bonus[1])
@@ -174,6 +180,13 @@ while isWorking:
     best_rect.x = width - 150
     best_rect.y = 40
 
+    level_text = font.render('Level: ' + str(level), True, GREEN)
+    level_rect = level_text.get_rect()
+    level_rect.x = 5
+    level_rect.y = 10
+    
+
     surface.blit(best_text, best_rect)
     surface.blit(score_text, text_rect)
+    surface.blit(level_text, level_rect)
     pg.display.flip()
