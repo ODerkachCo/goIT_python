@@ -47,7 +47,7 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 200)
 YELLOW = (100, 100, 0)
-GREEN = (0, 255, 0)
+GREEN = (0, 100, 0)
 
 pg.init()
 
@@ -61,39 +61,43 @@ if isFile:
     best_score = read()
 
 font = pg.font.Font('freesansbold.ttf', 18)
+GOOSE_PATH = "./imgs/goose"
+player_imgs = [pg.image.load(f'{GOOSE_PATH}/{file}').convert_alpha() for file in os.listdir(GOOSE_PATH)]
+player = player_imgs[0]
+p_rect = player.get_rect()
+p_speed = 5
 
-
-ball = pg.Surface((20, 20))
-ball.fill(WHITE)
-b_rect = ball.get_rect()
-b_speed = 5
+bg = pg.transform.scale(pg.image.load("./imgs/background.png").convert(), screen)
+bg_start = 0
+bg_finish = bg.get_width()
+bg_speed = 3
 
 isWorking = True
 CREATE_ENEMY = pg.USEREVENT + 1
 CREATE_BONUS = pg.USEREVENT + 2
+CHANGE_IMG = pg.USEREVENT + 3
 pg.time.set_timer(CREATE_ENEMY, 1500)
 pg.time.set_timer(CREATE_BONUS, 2000)
-
+pg.time.set_timer(CHANGE_IMG, 125)
 
 def create_enemy():
-    enemy = pg.Surface((20, 20))
-    enemy.fill(RED)
-    e_rect = pg.Rect(width, get_random(0, height), *enemy.get_size())
+    enemy = pg.image.load("./imgs/enemy.png").convert_alpha()
+    e_rect = pg.Rect(width, get_random(enemy.get_size()[1], height - enemy.get_size()[1]), *enemy.get_size())
     e_speed = get_random(2, 5)
     return [enemy, e_rect, e_speed]
 def create_bonus():
-    bonus = pg.Surface((20, 20))
-    bonus.fill(GREEN)
-    bonus_rect = pg.Rect(get_random(0, width), 0, *bonus.get_size())
-    bonus_speed = get_random(2, 5)
+    bonus = pg.image.load("./imgs/bonus.png").convert_alpha()
+    bonus_rect = pg.Rect(get_random(bonus.get_size()[0], width - bonus.get_size()[0]), -bonus.get_size()[1], *bonus.get_size())
+    bonus_speed = get_random(5, 8)
     return [bonus, bonus_rect, bonus_speed]
 
 enemies = []
 bonuses = []
-
+count = 0
 FPS = pg.time.Clock()
 while isWorking:
     FPS.tick(120)
+    
     for i in pg.event.get():
         if i.type == QUIT:
             write(best_score)
@@ -102,50 +106,70 @@ while isWorking:
             enemies.append(create_enemy())
         if i.type == CREATE_BONUS:
             bonuses.append(create_bonus())
+        if i.type == CHANGE_IMG:
+            count += 1
+            if count == len(player_imgs):
+                count = 0
+            player = player_imgs[count]
 
     keys = pg.key.get_pressed()
     
-    if (keys[K_DOWN] or keys[K_s]) and not b_rect.bottom >= height:
-       b_rect = b_rect.move(0, b_speed)
-    if (keys[K_UP] or keys[K_w]) and not b_rect.top <= 0:
-        b_rect = b_rect.move(0, -b_speed)
-    if (keys[K_RIGHT] or keys[K_d]) and not b_rect.right >= width:
-        b_rect = b_rect.move(b_speed, 0)
-    if (keys[K_LEFT] or keys[K_a]) and not b_rect.left <= 0:
-        b_rect = b_rect.move(-b_speed, 0)
+    if (keys[K_DOWN] or keys[K_s]) and not p_rect.bottom >= height:
+       p_rect = p_rect.move(0, p_speed)
+    if (keys[K_UP] or keys[K_w]) and not p_rect.top <= 0:
+        p_rect = p_rect.move(0, -p_speed)
+    if (keys[K_RIGHT] or keys[K_d]) and not p_rect.right >= width:
+        p_rect = p_rect.move(p_speed, 0)
+    if (keys[K_LEFT] or keys[K_a]) and not p_rect.left <= 0:
+        p_rect = p_rect.move(-p_speed, 0)
 
-    surface.fill(BLACK)
-    surface.blit(ball, b_rect)
+    # surface.blit(bg, (0, 0))
+    bg_start -= bg_speed
+    bg_finish -= bg_speed
+
+    if bg_start < -bg.get_width():
+        bg_start = bg.get_width()
     
+    if bg_finish < -bg.get_width():
+        bg_finish = bg.get_width()
+
+    surface.blit(bg, (bg_start, 0))
+    surface.blit(bg, (bg_finish, 0))
+
+
+    surface.blit(player, p_rect)
+    
+
     for enemy in enemies:
         enemy[1] = enemy[1].move(-enemy[2], 0)
         surface.blit(enemy[0], enemy[1])
 
-        if enemy[1].left < -30:
+        if enemy[1].left < -enemy[0].get_size()[0]:
             enemies.pop(enemies.index(enemy))
 
-        if b_rect.colliderect(enemy[1]):
+        if p_rect.colliderect(enemy[1]):
             enemies.pop(enemies.index(enemy))
-            score -= 1
+            isWorking = False
     
     for bonus in bonuses:
         bonus[1] = bonus[1].move(0, bonus[2])
         surface.blit(bonus[0], bonus[1])
         
-        if bonus[1].bottom > height + 30:
+        if bonus[1].bottom > height + bonus[0].get_size()[1]:
             bonuses.pop(bonuses.index(bonus))
 
-        if b_rect.colliderect(bonus[1]):
+        if p_rect.colliderect(bonus[1]):
             bonuses.pop(bonuses.index(bonus))
             score += 1
-    score_text = font.render('Score: ' + str(score), True, WHITE, BLACK)
+
+    score_text = font.render('Score: ' + str(score), True, GREEN)
     text_rect = score_text.get_rect()
     text_rect.x = width - 150
     text_rect.y = 10
     if best_score < score:
         best_score = score
     
-    best_text = font.render('Best score: ' + str(best_score), True, WHITE, BLACK)
+    best_text = font.render('Best score: ' + str(best_score), True, GREEN)
     best_rect = best_text.get_rect()
     best_rect.x = width - 150
     best_rect.y = 40
